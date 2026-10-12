@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Database Management System | FastAPI + SQLite</title>
+    <meta name="description" content="Production-grade FastAPI and SQLite Student Records CRUD Application with optional Ollama AI Natural Language Search extension.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Styles -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div class="brand-text">
+                    <h2>EduBase <span>Pro</span></h2>
+                    <p>FastAPI + SQLite Engine</p>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-tab="students-tab" id="nav-students">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Student Directory</span>
+                </button>
+                <button class="nav-btn" data-tab="ai-tab" id="nav-ai">
+                    <i class="fa-solid fa-robot"></i>
+                    <span>Ollama AI Assistant</span>
+                    <span class="badge-pill">AI Bonus</span>
+                </button>
+                <a href="/docs" target="_blank" class="nav-btn link-btn" id="nav-swagger">
+                    <i class="fa-solid fa-code"></i>
+                    <span>Swagger API Docs</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square external-icon"></i>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="system-status">
+                    <span class="status-dot online"></span>
+                    <div class="status-info">
+                        <span class="status-title">FastAPI Backend</span>
+                        <span class="status-sub">SQLite Persistent DB</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Navbar Header -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h1 id="page-title">Student Directory</h1>
+                    <p id="page-subtitle">Manage student profiles with Create, Read, Update, and Delete operations.</p>
+                </div>
+
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="btn-seed-data" title="Reset & Seed Sample Students">
+                        <i class="fa-solid fa-database"></i> Seed Dummy Data
+                    </button>
+                    <button class="btn btn-primary" id="btn-open-add-modal">
+                        <i class="fa-solid fa-plus"></i> Add New Student
+                    </button>
+                </div>
+            </header>
+
+            <!-- Metrics Cards -->
+            <section class="metrics-grid">
+                <div class="metric-card glass">
+                    <div class="metric-icon blue">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+                    <div class="metric-data">
+                        <span class="metric-value" id="stat-total-students">0</span>
+                        <span class="metric-label">Total Enrolled</span>
+                    </div>
+                </div>
+
+                <div class="metric-card glass">
+                    <div class="metric-icon purple">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                    </div>
+                    <div class="metric-data">
+                        <span class="metric-value" id="stat-courses-count">0</span>
+                        <span class="metric-label">Active Courses</span>
+                    </div>
+                </div>
+
+                <div class="metric-card glass">
+                    <div class="metric-icon green">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <div class="metric-data">
+                        <span class="metric-value" id="stat-avg-gpa">0.00</span>
+                        <span class="metric-label">Average GPA</span>
+                    </div>
+                </div>
+
+                <div class="metric-card glass">
+                    <div class="metric-icon orange">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <div class="metric-data">
+                        <span class="metric-value" id="stat-latest-code">STU-1000</span>
+                        <span class="metric-label">Latest Student ID</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 1: STUDENTS DIRECTORY -->
+            <div class="tab-content active" id="students-tab">
+                <div class="table-container glass">
+                    <!-- Controls Bar -->
+                    <div class="controls-bar">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="search-input" placeholder="Search by name, email, code, or course...">
+                            <button class="clear-search-btn" id="btn-clear-search" style="display: none;">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <div class="filter-box">
+                            <select id="course-filter-select">
+                                <option value="">All Courses</option>
+                            </select>
+
+                            <button class="btn btn-icon" id="btn-refresh-list" title="Refresh Table">
+                                <i class="fa-solid fa-rotate-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Code</th>
+                                    <th>Student Name</th>
+                                    <th>Contact Info</th>
+                                    <th>Date of Birth</th>
+                                    <th>Course Program</th>
+                                    <th>GPA</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-table-body">
+                                <tr>
+                                    <td colspan="7" class="loading-cell">
+                                        <div class="spinner"></div> Loading student records...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination / Counter Footer -->
+                    <div class="table-footer">
+                        <span class="table-summary" id="table-summary-text">Showing 0 of 0 students</span>
+                        <div class="pagination-controls">
+                            <button class="btn-page" id="btn-prev-page" disabled><i class="fa-solid fa-chevron-left"></i></button>
+                            <span class="page-indicator" id="page-indicator">Page 1</span>
+                            <button class="btn-page" id="btn-next-page" disabled><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: OLLAMA AI ASSISTANT -->
+            <div class="tab-content" id="ai-tab" style="display: none;">
+                <div class="ai-container glass">
+                    <div class="ai-header">
+                        <div class="ai-title">
+                            <i class="fa-solid fa-brain"></i>
+                            <div>
+                                <h3>Natural Language Database Query</h3>
+                                <p>Ask questions about student records in plain English. Grounded by real SQLite records.</p>
+                            </div>
+                        </div>
+                        <div class="ollama-status-badge" id="ollama-status-badge">
+                            <span class="status-dot pulse"></span>
+                            <span id="ollama-status-text">Checking Ollama Local LLM...</span>
+                        </div>
+                    </div>
+
+                    <!-- Example Prompt Chips -->
+                    <div class="prompt-suggestions">
+                        <span class="suggestion-label">Try asking:</span>
+                        <button class="suggestion-chip" data-question="How many students are enrolled in total?">
+                            📊 Total students enrolled?
+                        </button>
+                        <button class="suggestion-chip" data-question="List all students enrolled in Data Science & AI.">
+                            💻 Data Science & AI students?
+                        </button>
+                        <button class="suggestion-chip" data-question="Which students have a GPA above 3.70?">
+                            ⭐ Top performing GPA students?
+                        </button>
+                        <button class="suggestion-chip" data-question="List students born after 2002.">
+                            📅 Students born after 2002?
+                        </button>
+                    </div>
+
+                    <!-- Chat / Response Box -->
+                    <div class="ai-chat-box" id="ai-chat-box">
+                        <div class="ai-message system">
+                            <div class="message-avatar"><i class="fa-solid fa-robot"></i></div>
+                            <div class="message-content">
+                                <p>Hello! I can answer questions about student records using grounded database context. Type a question below or click an example above!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Form -->
+                    <form id="ai-query-form" class="ai-input-form">
+                        <input type="text" id="ai-question-input" placeholder="Type your natural-language question here..." required autocomplete="off">
+                        <button type="submit" class="btn btn-primary" id="btn-submit-ai">
+                            <span>Ask AI</span>
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- CREATE / EDIT STUDENT MODAL -->
+    <div class="modal-backdrop" id="student-modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3 id="modal-title"><i class="fa-solid fa-user-plus"></i> Add New Student</h3>
+                <button class="modal-close-btn" id="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="student-form">
+                <input type="hidden" id="form-student-id">
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="form-student-code">Student Code (Optional)</label>
+                        <input type="text" id="form-student-code" placeholder="Auto-generated if blank (e.g. STU-1006)">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="form-name">Full Name <span class="required">*</span></label>
+                        <input type="text" id="form-name" placeholder="e.g. Aarav Sharma" required minlength="2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="form-email">Email Address <span class="required">*</span></label>
+                        <input type="email" id="form-email" placeholder="e.g. aarav@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="form-phone">Phone Number <span class="required">*</span></label>
+                        <input type="tel" id="form-phone" placeholder="e.g. +91 98765 43210" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="form-dob">Date of Birth <span class="required">*</span></label>
+                        <input type="date" id="form-dob" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="form-course">Course Program</label>
+                        <input type="text" id="form-course" placeholder="e.g. Computer Science & Engineering">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="form-enrollment-date">Enrollment Date</label>
+                        <input type="date" id="form-enrollment-date">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="form-gpa">GPA (0.0 to 4.0)</label>
+                        <input type="number" id="form-gpa" min="0.0" max="4.0" step="0.01" placeholder="e.g. 3.85">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="form-address">Residential Address</label>
+                        <input type="text" id="form-address" placeholder="e.g. 42 MG Road, Bengaluru, Karnataka">
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-student">
+                        <i class="fa-solid fa-check"></i> Save Record
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- VIEW DETAILS MODAL -->
+    <div class="modal-backdrop" id="view-modal">
+        <div class="modal-content glass modal-md">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-address-card"></i> Student Profile</h3>
+                <button class="modal-close-btn" id="btn-close-view-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="profile-details-body" id="view-profile-body">
+                <!-- Dynamically injected -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btn-close-view">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRMATION MODAL -->
+    <div class="modal-backdrop" id="delete-modal">
+        <div class="modal-content glass modal-sm">
+            <div class="modal-header danger-header">
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> Confirm Delete</h3>
+                <button class="modal-close-btn" id="btn-close-delete-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete student <strong id="delete-student-name"></strong> (<span id="delete-student-code"></span>)?</p>
+                <p class="warning-text">This action will remove the record permanently from the database.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btn-cancel-delete">Cancel</button>
+                <button type="button" class="btn btn-danger" id="btn-confirm-delete">
+                    <i class="fa-solid fa-trash-can"></i> Delete Permanently
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

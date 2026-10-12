@@ -165,6 +165,3 @@ To enable local AI inference with Ollama:
 
 ---
 
-## 📜 License & Credits
-Issued by **EWB Edu Tech Pvt. Ltd. | Internship Program**.
-Developed with Python, FastAPI, SQLAlchemy, SQLite, Pydantic, and Vanilla JS/CSS.
